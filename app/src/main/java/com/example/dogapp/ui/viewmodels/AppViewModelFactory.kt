@@ -3,9 +3,11 @@ package com.example.dogapp.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.dogapp.data.repository.CitaRepository
+import com.example.dogapp.data.repository.DogBreedRepository
 
 class AppViewModelFactory(
-    private val repository: CitaRepository
+    private val repository: CitaRepository,
+    private val dogBreedRepository: DogBreedRepository = DogBreedRepository()
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -15,7 +17,7 @@ class AppViewModelFactory(
                 HomeViewModel(repository) as T
             }
             modelClass.isAssignableFrom(NewCitaViewModel::class.java) -> {
-                NewCitaViewModel(repository) as T
+                NewCitaViewModel(repository, dogBreedRepository) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

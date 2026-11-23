@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dogapp.R
 import com.example.dogapp.data.local.Cita
+import com.example.dogapp.ui.components.CitaImage
 import com.example.dogapp.ui.components.HeaderCurvedShape
 import com.example.dogapp.ui.theme.AccentPink
 import com.example.dogapp.ui.theme.DarkGrayHeader
@@ -179,17 +181,16 @@ fun HomeScreenContent(
 @Composable
 fun HomeHeader() {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(180.dp),
+        modifier = Modifier.fillMaxWidth(),
         shape = HeaderCurvedShape(cornerRadius = 55.dp),
         color = DarkGrayHeader,
         shadowElevation = 0.dp
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .statusBarsPadding()
+                .heightIn(min = 170.dp)
                 .padding(horizontal = 24.dp, vertical = 12.dp)
         ) {
             // Izquierda: Título "Administrador de Citas" de color blanco bold, centrado verticalmente
@@ -258,8 +259,8 @@ fun CitaListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Izquierda: imagen circular de la mascota
-            Image(
-                painter = painterResource(citaAvatar(cita)),
+            CitaImage(
+                cita = cita,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

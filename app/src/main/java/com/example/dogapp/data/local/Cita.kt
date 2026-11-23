@@ -13,5 +13,7 @@ data class Cita(
     val telefono: String = "",
     val fecha: String = "",
     val hora: String = "",
-    val avatarRes: Int? = null
+    val avatarRes: Int? = null,
+    val raza: String? = null,
+    val fotoUrl: String? = null
 )

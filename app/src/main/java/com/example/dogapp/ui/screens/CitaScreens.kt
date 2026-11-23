@@ -1,11 +1,11 @@
 package com.example.dogapp.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,7 +21,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -32,7 +34,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,19 +53,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.dogapp.R
+import com.example.dogapp.ui.components.BreedField
+import com.example.dogapp.ui.components.CitaImage
 import com.example.dogapp.data.local.Cita
 import com.example.dogapp.ui.theme.AccentPink
 import com.example.dogapp.ui.theme.DarkGrayHeader
 import com.example.dogapp.ui.theme.DogAppTheme
 import com.example.dogapp.ui.theme.FredokaFontFamily
+import com.example.dogapp.ui.theme.TextPrimary
+import com.example.dogapp.ui.theme.TextSecondary
 import com.example.dogapp.ui.theme.White
 import kotlinx.coroutines.CancellationException
 import com.example.dogapp.ui.viewmodels.NewCitaViewModel
@@ -113,6 +120,9 @@ private fun CitaDetails(cita: Cita) {
                     modifier = Modifier.align(Alignment.End)
                 )
                 Spacer(Modifier.height(50.dp))
+                cita.raza?.let { raza ->
+                    Text(raza, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.CenterHorizontally))
+                }
                 Text(
                     text = cita.sintoma,
                     textAlign = TextAlign.Center,
@@ -130,21 +140,14 @@ private fun CitaDetails(cita: Cita) {
             colors = CardDefaults.cardColors(containerColor = White),
             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
         ) {
-            Image(
-                painter = painterResource(citaAvatar(cita)),
+            CitaImage(
+                cita = cita,
                 contentDescription = "Imagen de ${cita.nombreMascota}",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxWidth().height(184.dp).padding(8.dp)
             )
         }
     }
-}
-
-internal fun citaAvatar(cita: Cita): Int = when (val avatar = cita.avatarRes) {
-    R.drawable.pet1 -> R.drawable.pet_zeus
-    R.drawable.pet2 -> R.drawable.pet_kira
-    R.drawable.dog_head, null -> R.drawable.dog_brand
-    else -> avatar
 }
 
 private val sintomas = listOf(
@@ -162,15 +165,40 @@ fun NewCitaScreen(
     onBack: () -> Unit
 ) {
     var mascota by rememberSaveable { mutableStateOf("") }
+    var raza by rememberSaveable { mutableStateOf("") }
     var propietario by rememberSaveable { mutableStateOf("") }
     var telefono by rememberSaveable { mutableStateOf("") }
     var sintoma by rememberSaveable { mutableStateOf("") }
     var menuAbierto by remember { mutableStateOf(false) }
     var faltaSintoma by rememberSaveable { mutableStateOf(false) }
     val estado by viewModel.estado.collectAsState()
+    val catalogo by viewModel.catalogo.collectAsState()
+    val razas = remember(catalogo) {
+        (catalogo as? NewCitaViewModel.Catalogo.Disponible)?.razas?.map { it.name }.orEmpty()
+    }
     val guardando = estado == NewCitaViewModel.Estado.Guardando
+    val camposCompletos = mascota.isNotBlank() && raza.isNotBlank() &&
+        propietario.isNotBlank() && telefono.isNotBlank()
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedBorderColor = Color(0xFF6550A4),
+        focusedLabelColor = Color(0xFF6550A4),
+        unfocusedLabelColor = TextSecondary,
+        unfocusedBorderColor = TextSecondary
+    )
     LaunchedEffect(estado) {
         if (estado == NewCitaViewModel.Estado.Guardada) onBack()
+    }
+
+    if (faltaSintoma) {
+        AlertDialog(
+            onDismissRequest = { faltaSintoma = false },
+            text = { Text("Selecciona un síntoma") },
+            confirmButton = {
+                TextButton(onClick = { faltaSintoma = false }) { Text("Aceptar") }
+            }
+        )
     }
 
     BackHandler(enabled = guardando) {}
@@ -181,14 +209,34 @@ fun NewCitaScreen(
             label = { Text("Nombre de la Mascota") },
             enabled = !guardando,
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
+        BreedField(
+            value = raza,
+            onValueChange = {
+                raza = it
+                viewModel.limpiarErrorDeRaza()
+            },
+            names = razas,
+            enabled = !guardando,
+            modifier = Modifier.fillMaxWidth()
+        )
+        when (catalogo) {
+            NewCitaViewModel.Catalogo.Cargando -> Text("Cargando razas…")
+            NewCitaViewModel.Catalogo.Error -> {
+                Text("No se pudo cargar la lista de razas.")
+                TextButton(onClick = viewModel::cargarRazas) { Text("Reintentar") }
+            }
+            is NewCitaViewModel.Catalogo.Disponible -> Unit
+        }
         OutlinedTextField(
             value = propietario,
             onValueChange = { propietario = it.take(30) },
             label = { Text("Nombre del Propietario") },
             enabled = !guardando,
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -198,11 +246,13 @@ fun NewCitaScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             enabled = !guardando,
             singleLine = true,
+            colors = fieldColors,
             modifier = Modifier.fillMaxWidth()
         )
         Box(Modifier.align(Alignment.Start)) {
             TextButton(onClick = { menuAbierto = true }, enabled = !guardando) {
                 Text(sintoma.ifBlank { "Síntomas" })
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
             }
             DropdownMenu(expanded = menuAbierto, onDismissRequest = { menuAbierto = false }) {
                 sintomas.forEach { opcion ->
@@ -214,10 +264,13 @@ fun NewCitaScreen(
                 }
             }
         }
-        if (faltaSintoma) Text("Selecciona un síntoma")
-        if (estado == NewCitaViewModel.Estado.Error) {
-            Text("No se pudo guardar la cita. Intente nuevamente.")
+        val error = when (estado) {
+            NewCitaViewModel.Estado.RazaInvalida -> "Selecciona una raza de la lista."
+            NewCitaViewModel.Estado.ErrorFoto -> "No se pudo obtener la foto de la raza. Intente nuevamente."
+            NewCitaViewModel.Estado.ErrorGuardado -> "No se pudo guardar la cita. Intente nuevamente."
+            else -> null
         }
+        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Button(
             onClick = {
                 if (sintoma.isBlank()) {
@@ -229,15 +282,25 @@ fun NewCitaScreen(
                             propietario = propietario.trim(),
                             telefono = telefono,
                             sintoma = sintoma
-                        )
+                        ),
+                        nombreRaza = raza
                     )
                 }
             },
-            enabled = !guardando && mascota.isNotBlank() && propietario.isNotBlank() && telefono.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(containerColor = AccentPink, contentColor = White)
+            enabled = !guardando && camposCompletos,
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AccentPink,
+                contentColor = White,
+                disabledContainerColor = AccentPink.copy(alpha = 0.4f)
+            )
         ) {
             Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(if (guardando) "Guardando…" else "Guardar Cita", Modifier.padding(start = 8.dp))
+            Text(
+                text = if (guardando) "Guardando…" else "Guardar Cita",
+                modifier = Modifier.padding(start = 8.dp),
+                fontWeight = if (camposCompletos && !guardando) FontWeight.Bold else FontWeight.Normal
+            )
         }
     }
 }
@@ -251,6 +314,7 @@ private fun CitaScreen(
 ) {
     Scaffold(
         containerColor = White,
+        contentColor = TextPrimary,
         topBar = {
             Surface(
                 color = DarkGrayHeader,
@@ -282,6 +346,7 @@ private fun CitaScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .consumeWindowInsets(padding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
