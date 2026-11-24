@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <!-- HU 1.0: Login con biometría. Al autenticarse se saca del back stack. -->
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.dogapp.ui.fragments.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- HU 2.0: Home Administrador de Citas -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.dogapp.ui.fragments.HomeFragment"
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_newCita"
+            app:destination="@id/newCitaFragment" />
+        <action
+            android:id="@+id/action_home_to_detail"
+            app:destination="@id/detailCitaFragment" />
+    </fragment>
+
+    <!-- HU 3.0: Nueva Cita -->
+    <fragment
+        android:id="@+id/newCitaFragment"
+        android:name="com.example.dogapp.ui.fragments.NewCitaFragment"
+        android:label="Nueva Cita" />
+
+    <!-- HU 4.0: Detalle de la Cita -->
+    <fragment
+        android:id="@+id/detailCitaFragment"
+        android:name="com.example.dogapp.ui.fragments.DetailCitaFragment"
+        android:label="Detalle de la Cita">
+        <argument
+            android:name="citaId"
+            app:argType="long" />
+        <action
+            android:id="@+id/action_detail_to_edit"
+            app:destination="@id/editCitaFragment" />
+    </fragment>
+
+    <!-- HU 5.0: Editar Cita -->
+    <fragment
+        android:id="@+id/editCitaFragment"
+        android:name="com.example.dogapp.ui.fragments.EditCitaFragment"
+        android:label="Editar Cita">
+        <argument
+            android:name="citaId"
+            app:argType="long" />
+    </fragment>
+</navigation>
