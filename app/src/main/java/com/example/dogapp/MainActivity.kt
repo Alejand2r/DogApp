@@ -21,9 +21,10 @@ import com.example.dogapp.data.local.AppDatabase
 import com.example.dogapp.data.repository.CitaRepositoryImpl
 import com.example.dogapp.ui.navigation.Screen
 import com.example.dogapp.ui.screens.DetailCitaScreen
+import com.example.dogapp.ui.screens.EditCitaScreen
 import com.example.dogapp.ui.screens.HomeScreen
-import com.example.dogapp.ui.screens.NewCitaScreen
 import com.example.dogapp.ui.screens.LoginScreen
+import com.example.dogapp.ui.screens.NewCitaScreen
 import com.example.dogapp.ui.theme.DarkGrayBackground
 import com.example.dogapp.ui.theme.DogAppTheme
 import com.example.dogapp.ui.viewmodels.AppViewModelFactory
@@ -51,7 +52,7 @@ fun DogAppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // Instanciación limpia de la arquitectura MVVM: Room Database -> Repository -> ViewModelFactory
+    // MVVM: Room Database -> Repository -> ViewModelFactory
     val database = AppDatabase.getDatabase(context)
     val repository = remember(database) { CitaRepositoryImpl(database.citaDao()) }
     val viewModelFactory = remember(repository) { AppViewModelFactory(repository) }
@@ -60,6 +61,7 @@ fun DogAppNavigation() {
         navController = navController,
         startDestination = Screen.Login.route
     ) {
+        // HU 1.0
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
@@ -70,19 +72,19 @@ fun DogAppNavigation() {
             )
         }
 
+        // HU 2.0
         composable(Screen.Home.route) {
             val homeViewModel: HomeViewModel = viewModel(factory = viewModelFactory)
             HomeScreen(
                 viewModel = homeViewModel,
-                onNavigateToNewCita = {
-                    navController.navigate(Screen.NewCita.route)
-                },
+                onNavigateToNewCita = { navController.navigate(Screen.NewCita.route) },
                 onNavigateToDetail = { citaId ->
                     navController.navigate(Screen.DetailCita.createRoute(citaId))
                 }
             )
         }
 
+        // HU 3.0
         composable(Screen.NewCita.route) {
             NewCitaScreen(
                 viewModel = viewModel(factory = viewModelFactory),
@@ -90,6 +92,7 @@ fun DogAppNavigation() {
             )
         }
 
+        // HU 4.0: Detalle de la Cita
         composable(
             route = Screen.DetailCita.route,
             arguments = listOf(navArgument("citaId") { type = NavType.LongType })
@@ -97,10 +100,30 @@ fun DogAppNavigation() {
             val citaId = backStackEntry.arguments?.getLong("citaId") ?: 0L
             DetailCitaScreen(
                 citaId = citaId,
-                loadCita = repository::getCitaById,
-                onBack = { navController.popBackStack() }
+                viewModel = viewModel(factory = viewModelFactory),
+                // Criterio 1: flecha atrás -> Home
+                onBack = { navController.popBackStack() },
+                // Criterio 5: editar -> HU 5.0
+                onEdit = { navController.navigate(Screen.EditCita.createRoute(citaId)) },
+                // Criterio 4: tras eliminar -> Home
+                onDeleted = { navController.popBackStack(Screen.Home.route, inclusive = false) }
+            )
+        }
+
+        // HU 5.0: Editar Cita
+        composable(
+            route = Screen.EditCita.route,
+            arguments = listOf(navArgument("citaId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val citaId = backStackEntry.arguments?.getLong("citaId") ?: 0L
+            EditCitaScreen(
+                citaId = citaId,
+                viewModel = viewModel(factory = viewModelFactory),
+                // Criterio 1: flecha atrás -> Detalle de la misma cita
+                onBack = { navController.popBackStack() },
+                // Criterio 8: tras guardar -> Home
+                onSaved = { navController.popBackStack(Screen.Home.route, inclusive = false) }
             )
         }
     }
 }
-

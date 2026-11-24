@@ -19,6 +19,12 @@ class AppViewModelFactory(
             modelClass.isAssignableFrom(NewCitaViewModel::class.java) -> {
                 NewCitaViewModel(repository, dogBreedRepository) as T
             }
+            modelClass.isAssignableFrom(DetailCitaViewModel::class.java) -> {
+                DetailCitaViewModel(repository) as T
+            }
+            modelClass.isAssignableFrom(EditCitaViewModel::class.java) -> {
+                EditCitaViewModel(repository, dogBreedRepository) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

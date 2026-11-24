@@ -32,6 +32,10 @@ class CitaRepositoryImpl(
         citaDao.updateCita(cita)
     }
 
+    override fun observeCitaById(id: Long): Flow<Cita?> {
+        return citaDao.observeCitaById(id)
+    }
+
     override suspend fun deleteCita(cita: Cita): Int = withContext(ioDispatcher) {
         citaDao.deleteCita(cita)
     }
