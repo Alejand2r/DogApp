@@ -64,8 +64,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.material.views)
 
-    // Navigation Compose
-    implementation(libs.androidx.navigation.compose)
+    // Fragments + Navigation Component (cada pantalla vive en un Fragment)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.navigation.fragment.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -67,20 +67,26 @@ class EditCitaViewModel(
         // Evita doble clic mientras ya se está guardando
         if (_estado.value == Estado.Guardando || _estado.value == Estado.Guardada) return
 
-        // HU 5.0 - Criterio 3: la raza escrita debe existir en la lista de la API
-        val razas = (_catalogo.value as? Catalogo.Disponible)?.razas
-        val raza = razas?.firstOrNull { it.name.equals(nombreRaza.trim(), ignoreCase = true) }
-        if (raza == null) {
-            _estado.value = Estado.RazaInvalida
-            return
+        // Si la raza no cambió y ya tiene foto, no hace falta validar contra la API ni pedir otra foto.
+        val razaSinCambios = nombreRaza.trim().equals(original.raza, ignoreCase = true) &&
+            !original.fotoUrl.isNullOrBlank()
+
+        // HU 5.0 - Criterio 3: si cambió, la raza escrita debe existir en la lista de la API
+        val raza = if (razaSinCambios) {
+            null
+        } else {
+            val razas = (_catalogo.value as? Catalogo.Disponible)?.razas
+            razas?.firstOrNull { it.name.equals(nombreRaza.trim(), ignoreCase = true) }
+                ?: run {
+                    _estado.value = Estado.RazaInvalida
+                    return
+                }
         }
 
         _estado.value = Estado.Guardando
         viewModelScope.launch {
             // Misma raza -> conserva la foto. Raza nueva -> pide una foto nueva a la API.
-            val fotoUrl = if (raza.name.equals(original.raza, ignoreCase = true) &&
-                !original.fotoUrl.isNullOrBlank()
-            ) {
+            val fotoUrl = if (raza == null) {
                 original.fotoUrl
             } else {
                 try {
@@ -100,7 +106,7 @@ class EditCitaViewModel(
                         nombreMascota = nombre.trim(),
                         propietario = propietario.trim(),
                         telefono = telefono,
-                        raza = raza.name,
+                        raza = raza?.name ?: original.raza,
                         fotoUrl = fotoUrl
                     )
                 )
@@ -112,4 +118,4 @@ class EditCitaViewModel(
             }
         }
     }
-    }
+}
