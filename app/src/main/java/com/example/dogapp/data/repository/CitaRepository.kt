@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CitaRepository {
     fun getAllCitas(): Flow<List<Cita>>
+    fun observeCitaById(id: Long): Flow<Cita?>
     suspend fun getCitaById(id: Long): Cita?
     suspend fun insertCita(cita: Cita): Long
     suspend fun insertAll(citas: List<Cita>): List<Long>

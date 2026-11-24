@@ -17,6 +17,9 @@ interface CitaDao {
     @Query("SELECT * FROM citas WHERE id = :id LIMIT 1")
     fun getCitaById(id: Long): Cita?
 
+    @Query("SELECT * FROM citas WHERE id = :id LIMIT 1")
+    fun observeCitaById(id: Long): Flow<Cita?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertCita(cita: Cita): Long
 
