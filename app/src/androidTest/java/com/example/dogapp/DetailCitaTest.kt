@@ -85,4 +85,29 @@ class DetailCitaTest {
             database.close()
         }
     }
+
+    @Test
+    fun updatesAndDeletesTheRequestedRecord() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        try {
+            val repository = CitaRepositoryImpl(database.citaDao())
+            val id = repository.insertCita(
+                Cita(nombreMascota = "Cory", sintoma = "Tiene pulgas", propietario = "Walter", telefono = "3045675518")
+            )
+            val original = repository.getCitaById(id)!!
+
+            // HU 5.0: editar conserva el id (turno) y el síntoma
+            val edited = original.copy(nombreMascota = "Rocky", raza = "Pug", telefono = "3001112233")
+            repository.updateCita(edited)
+            assertEquals(edited, repository.observeCitaById(id).first())
+
+            // HU 4.0: eliminar
+            repository.deleteCita(edited)
+            assertNull(repository.getCitaById(id))
+            assertNull(repository.observeCitaById(id).first())
+        } finally {
+            database.close()
+        }
+    }
 }
