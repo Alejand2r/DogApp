@@ -55,7 +55,7 @@ fun BreedField(
 }
 
 private class BreedAdapter(context: Context, private val names: List<String>) :
-    ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line) {
+    ArrayAdapter<String>(context, R.layout.item_breed_dropdown) {
 
     private val prefixFilter = object : Filter() {
         override fun performFiltering(constraint: CharSequence?): FilterResults {
